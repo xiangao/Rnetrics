@@ -1,0 +1,28 @@
+Package: Rnetrics
+Title: Dyadic Regression with Bias-Corrected Standard Errors
+Version: 0.1.0
+Authors@R: c(
+    person("Bryan", "Graham", role = "aut",
+           comment = "Original Python ipt/netrics packages"),
+    person("Xiang", "Ao", role = c("aut", "cre"),
+           email = "xao@berkeley.edu"))
+Description: R port of Graham's ipt and netrics Python packages. Implements
+    dyadic regression with heteroscedastic-robust, cluster-robust, and
+    bias-corrected dyadic-robust (DR_bc) standard errors, following Graham
+    (forthcoming, Handbook of Econometrics). Supports linear (OLS), logit,
+    and Poisson conditional mean models. Handles unbalanced/sparse networks
+    and large datasets via chunked Hajek projection.
+Depends: R (>= 4.0.0)
+Imports:
+    stats,
+    utils
+Suggests:
+    testthat (>= 3.0.0),
+    sandwich,
+    fixest,
+    arrow,
+    data.table
+License: MIT + file LICENSE
+Encoding: UTF-8
+RoxygenNote: 7.3.3
+Config/testthat/edition: 3

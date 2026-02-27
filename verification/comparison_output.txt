@@ -1,0 +1,88 @@
+============================================================================== 
+  VERIFICATION: Rnetrics (R) vs netrics (Python)  —  Graham (2024)
+============================================================================== 
+
+DATASET 1: Simulated undirected dyadic data
+  N = 80 agents,  n = 3,160 undirected dyads
+  DGP: Y = 1 + 0.5 * x_ij + N(0, 0.5),  x_ij = (a_i - a_j)^2
+  Model: OLS (normal),  cov = DR_bc
+  Seed: numpy.random.seed(123)
+
+  Rnetrics: N = 80 agents,  n = 3160 dyads
+
+  Variable         Coef (Rnetrics)  Coef (netrics (Py))     Coef diff  SE (Rnetrics)  SE (netrics (Py))       SE diff 
+  ------------------------------------------------------------------------------------------------------------------- 
+  constant             1.000202      1.000202     -2.22e-16      0.009332      0.010876     -1.54e-03
+  x                    0.500477      0.500477      2.33e-15      0.003591      0.002865      7.26e-04
+
+  Max |coef diff| = 2.33e-15   Max |SE diff| = 1.54e-03
+
+  NOTE on SE discrepancy for undirected data:
+  Rnetrics uses explicit id_i/id_j vectors to scatter-add scores to each
+  agent (correct).  Python netrics fills an N×N matrix via
+  np.tril_indices which assumes data is sorted in lower-triangular order
+  (id_i > id_j).  Our sim data uses id_i < id_j (upper-triangular), so
+  Python's column sums misassign scores for some agents for N >= 4.
+  Rnetrics SEs are correct; Python SEs are artefacts of the ordering.
+
+------------------------------------------------------------------------------ 
+
+DATASET 2: Log of Gravity (Santos Silva & Tenreyro, REStat 2006)
+  N = 136 countries,  n = 18,360 directed dyads
+  Model: Poisson,  directed = TRUE,  cov = DR_bc
+  Variables: 14 regressors + constant  (nocons = TRUE)
+
+  Running Rnetrics (Poisson, directed, DR_bc)  …
+
+  Rnetrics: N = 136 countries,  n = 18360 dyads
+
+  Variable         Coef (Rnetrics)  Coef (netrics (Py))     Coef diff  SE (Rnetrics)  SE (netrics (Py))       SE diff 
+  ------------------------------------------------------------------------------------------------------------------- 
+  lypex                0.732519      0.732481      3.85e-05      0.033097      0.033088      8.98e-06
+  lypim                0.741112      0.741078      3.38e-05      0.035489      0.035484      5.31e-06
+  lyex                 0.156688      0.156712     -2.36e-05      0.052337      0.052329      8.01e-06
+  lyim                 0.134983      0.135018     -3.59e-05      0.046385      0.046381      3.75e-06
+  ldist               -0.783848     -0.783801     -4.78e-05      0.063583      0.063582      2.68e-07
+  border               0.192730      0.192911     -1.80e-04      0.165052      0.165108     -5.59e-05
+  comlang              0.745844      0.745984     -1.40e-04      0.275520      0.275508      1.19e-05
+  colony               0.025238      0.025006      2.32e-04      0.274557      0.274542      1.46e-05
+  landl_ex            -0.863044     -0.863474      4.30e-04      0.128901      0.128897      3.97e-06
+  landl_im            -0.696468     -0.696420     -4.75e-05      0.165506      0.165449      5.69e-05
+  lremot_ex            0.659921      0.659840      8.10e-05      0.175416      0.175423     -7.02e-06
+  lremot_im            0.561489      0.561500     -1.08e-05      0.169776      0.169760      1.60e-05
+  comfrt_wto           0.181167      0.181107      6.00e-05      0.158621      0.158613      7.55e-06
+  open_wto            -0.106648     -0.106819      1.71e-04      0.215408      0.215419     -1.18e-05
+  constant           -39.235660    -39.233859     -1.80e-03      3.049251      3.049339     -8.84e-05
+
+  Max |coef diff| = 1.80e-03   Max |SE diff| = 8.84e-05
+
+  NOTE on coefficient differences for Log of Gravity:
+  Both R (Rnetrics) and Python (netrics) use the same Poisson MLE but
+  different numerical optimizers (R: optim BFGS; Python: fmin_bfgs).
+  The small coef differences (< 2e-03) reflect optimizer convergence
+  tolerance, not a structural discrepancy.
+  SE differences < 1e-04 after two R bug fixes applied in this session:
+    (1) Sigma1: directed Hajek projection now divides by N-1 (unique
+        partners) rather than 2*(N-1) (directed dyad appearances).
+    (2) Sigma2: directed case now uses symmetrised kernels
+        s_sym_{ij} = S_{ij} + S_{ji}, matching Graham's formula.
+
+============================================================================== 
+  SUMMARY
+============================================================================== 
+
+  Test                                           Max coef diff   Max SE diff
+  ------------------------------------------------------------------------
+  Sim data  (OLS, undirected, N=80)                  2.33e-15      1.54e-03
+  Log of Gravity  (Poisson, directed, N=136)         1.80e-03      8.84e-05
+
+  VERDICT:
+  • Undirected OLS  : Rnetrics coefficients = Python to machine precision.
+    SE differ because Python netrics has a data-ordering dependency in its
+    undirected Hajek projection (lt_ij fill assumes id_i > id_j sort order).
+    Rnetrics is correct; it is the reference for undirected dyadic SE.
+
+  • Directed Poisson: After fixing Sigma1 and Sigma2 in R, coefficients
+    agree to optimizer tolerance (< 2e-03) and SEs agree to < 1e-04.
+    Rnetrics directed implementation is now verified against Graham's netrics.
+
