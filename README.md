@@ -1,10 +1,10 @@
 # Rnetrics
 
-R port of Bryan Graham's
+`Rnetrics` is an R port of Bryan Graham's
 [ipt](https://github.com/bryangraham/ipt) and
 [netrics](https://github.com/bryangraham/netrics) Python packages.
-Implements dyadic regression with bias-corrected dyadic-robust standard
-errors following Graham (forthcoming, *Handbook of Econometrics*).
+It estimates dyadic regressions with the bias-corrected dyadic-robust standard
+errors in Graham (forthcoming, *Handbook of Econometrics*).
 
 ## Installation
 
@@ -49,12 +49,11 @@ result$n       # number of dyads
 | `"DR"` | Dyadic-robust (Aronow-Samii-Assenova 2015) |
 | `"DR_bc"` | Bias-corrected dyadic-robust — Graham (forthcoming) (default) |
 
-## Design
+## Implementation notes
 
 - Takes explicit `id_i`, `id_j` vectors instead of a Pandas MultiIndex
 - Supports unbalanced and sparse networks
-- Chunked Hajek projection handles datasets with 100M+ rows without
-  running out of memory
+- Chunked Hajek projection is used for very large dyad tables
 - Supports directed and undirected networks
 
 ## Verification
